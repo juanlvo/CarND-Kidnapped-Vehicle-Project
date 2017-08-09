@@ -19,12 +19,47 @@
 
 using namespace std;
 
+/**
+ * init Initializes particle filter by initializing particles to Gaussian
+ *   distribution around first position and all the weights to 1.
+ * @param x Initial x position [m] (simulated estimate from GPS)
+ * @param y Initial y position [m]
+ * @param theta Initial orientation [rad]
+ * @param std[] Array of dimension 3 [standard deviation of x [m], standard deviation of y [m]
+ *   standard deviation of yaw [rad]]
+ */
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
 	//   x, y, theta and their uncertainties from GPS) and all weights to 1. 
 	// Add random Gaussian noise to each particle.
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 
+	default_random_engine gen;
+	double std_x, std_y, std_psi; // Standard deviations for x, y, and psi
+
+
+	// This line creates a normal (Gaussian) distribution for x
+	normal_distribution<double> dist_x(x, std[0]);
+
+	// TODO: Create normal distributions for y and psi
+	normal_distribution<double> dist_y(y, std[1]);
+	normal_distribution<double> dist_psi(theta, std[2]);
+
+
+	for (int i = 0; i < 3; ++i) {
+		double sample_x, sample_y, sample_psi;
+
+		// TODO: Sample  and from these normal distrubtions like this:
+		//	 sample_x = dist_x(gen);
+		//	 where "gen" is the random engine initialized earlier.
+
+		 sample_x = dist_x(gen);
+		 sample_y = dist_y(gen);
+		 sample_psi = dist_psi(gen);
+
+		 // Print your samples to the terminal.
+		 cout << "Sample " << i + 1 << " " << sample_x << " " << sample_y << " " << sample_psi << endl;
+	}
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
