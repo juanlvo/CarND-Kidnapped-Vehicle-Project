@@ -34,9 +34,10 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// Add random Gaussian noise to each particle.
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 
-	default_random_engine gen;
-	double std_x, std_y, std_psi; // Standard deviations for x, y, and psi
+	num_particles = 50;
+	double initial_weight = 1.0;
 
+	default_random_engine gen;
 
 	// This line creates a normal (Gaussian) distribution for x
 	normal_distribution<double> dist_x(x, std[0]);
@@ -45,28 +46,76 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	normal_distribution<double> dist_y(y, std[1]);
 	normal_distribution<double> dist_psi(theta, std[2]);
 
+	// TODO: Sample  and from these normal distrubtions like this:
+	//	 sample_x = dist_x(gen);
+	//	 where "gen" is the random engine initialized earlier.
 
-	for (int i = 0; i < 3; ++i) {
-		double sample_x, sample_y, sample_psi;
 
-		// TODO: Sample  and from these normal distrubtions like this:
-		//	 sample_x = dist_x(gen);
-		//	 where "gen" is the random engine initialized earlier.
+	for (int i = 0; i < num_particles; ++i) {
 
-		 sample_x = dist_x(gen);
-		 sample_y = dist_y(gen);
-		 sample_psi = dist_psi(gen);
+		Particle p = {
+			i,
+			dist_x(gen),
+			dist_y(gen),
+			dist_psi(gen),
+			initial_weight
+		};
 
-		 // Print your samples to the terminal.
-		 cout << "Sample " << i + 1 << " " << sample_x << " " << sample_y << " " << sample_psi << endl;
+	    weights.push_back(initial_weight);
+	    particles.push_back(p);
 	}
+
+	is_initialized = true;
+	return;
 }
 
+/**
+ * prediction Predicts the state for the next time step
+ *   using the process model.
+ * @param delta_t Time between time step t and t+1 in measurements [s]
+ * @param std_pos[] Array of dimension 3 [standard deviation of x [m], standard deviation of y [m]
+ *   standard deviation of yaw [rad]]
+ * @param velocity Velocity of car from t to t+1 [m/s]
+ * @param yaw_rate Yaw rate of car from t to t+1 [rad/s]
+ */
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
 	// TODO: Add measurements to each particle and add random Gaussian noise.
 	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
+
+	std::vector<Particle> particles_prediction;
+
+	for (int i=0; i < num_particles; i++) {
+
+		default_random_engine gen;
+		double std_x, std_y, std_psi; // Standard deviations for x, y, and psi
+
+		// This line creates a normal (Gaussian) distribution for x
+		normal_distribution<double> dist_x(particles[i].x, std_pos[0]);
+
+		// TODO: Create normal distributions for y and psi
+		normal_distribution<double> dist_y(particles[i].y, std_pos[1]);
+		normal_distribution<double> dist_psi(particles[i].theta, std_pos[2]);
+
+		// turn, and add randomness to the turning command
+
+		double orientation = orientation + float(yaw_rate) + random.gauss(0.0, self.turn_noise)
+		orientation %= 2 * pi
+
+			# move, and add randomness to the motion command
+			dist = float(forward) + random.gauss(0.0, self.forward_noise)
+			x = self.x + (cos(orientation) * dist)
+			y = self.y + (sin(orientation) * dist)
+			x %= world_size    # cyclic truncate
+			y %= world_size
+
+			# set particle
+			res = robot()
+			res.set(x, y, orientation)
+			res.set_noise(self.forward_noise, self.turn_noise, self.sense_noise)
+			return res
+	}
 
 }
 
