@@ -39,12 +39,10 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 
 	default_random_engine gen;
 
-	// This line creates a normal (Gaussian) distribution for x
+	// This line creates a normal (Gaussian) distribution
 	normal_distribution<double> dist_x(x, std[0]);
-
-	// TODO: Create normal distributions for y and psi
 	normal_distribution<double> dist_y(y, std[1]);
-	normal_distribution<double> dist_psi(theta, std[2]);
+	normal_distribution<double> dist_theta(theta, std[2]);
 
 	// TODO: Sample  and from these normal distrubtions like this:
 	//	 sample_x = dist_x(gen);
@@ -57,7 +55,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 			i,
 			dist_x(gen),
 			dist_y(gen),
-			dist_psi(gen),
+			dist_theta(gen),
 			initial_weight
 		};
 
@@ -84,37 +82,28 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
 
-	std::vector<Particle> particles_prediction;
+	// This line creates a normal (Gaussian) distribution for sensor noise
+	normal_distribution<double> dist_x(particles[i].x, std_pos[0]);
+	normal_distribution<double> dist_y(particles[i].y, std_pos[1]);
+	normal_distribution<double> dist_theta(particles[i].theta, std_pos[2]);
 
 	for (int i=0; i < num_particles; i++) {
 
+		if (fabs(yaw_rate) < 0.00001) {
+		      particles[i].x += velocity * delta_t * cos(particles[i].theta);
+		      particles[i].y += velocity * delta_t * sin(particles[i].theta);
+		} else {
+		      particles[i].x += velocity / yaw_rate * (sin(particles[i].theta + yaw_rate*delta_t) - sin(particles[i].theta));
+		      particles[i].y += velocity / yaw_rate * (cos(particles[i].theta) - cos(particles[i].theta + yaw_rate*delta_t));
+		      particles[i].theta += yaw_rate * delta_t;
+		}
+
 		default_random_engine gen;
-		double std_x, std_y, std_psi; // Standard deviations for x, y, and psi
 
-		// This line creates a normal (Gaussian) distribution for x
-		normal_distribution<double> dist_x(particles[i].x, std_pos[0]);
-
-		// TODO: Create normal distributions for y and psi
-		normal_distribution<double> dist_y(particles[i].y, std_pos[1]);
-		normal_distribution<double> dist_psi(particles[i].theta, std_pos[2]);
-
-		// turn, and add randomness to the turning command
-
-		double orientation = orientation + float(yaw_rate) + random.gauss(0.0, self.turn_noise)
-		orientation %= 2 * pi
-
-			# move, and add randomness to the motion command
-			dist = float(forward) + random.gauss(0.0, self.forward_noise)
-			x = self.x + (cos(orientation) * dist)
-			y = self.y + (sin(orientation) * dist)
-			x %= world_size    # cyclic truncate
-			y %= world_size
-
-			# set particle
-			res = robot()
-			res.set(x, y, orientation)
-			res.set_noise(self.forward_noise, self.turn_noise, self.sense_noise)
-			return res
+	    // add noise
+	    particles[i].x += dist_x(gen);
+	    particles[i].y += dist_y(gen);
+	    particles[i].theta += dist_theta(gen);
 	}
 
 }
