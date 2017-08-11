@@ -154,6 +154,15 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 
 }
 
+/**
+ * updateWeights Updates the weights for each particle based on the likelihood of the
+ *   observed measurements.
+ * @param sensor_range Range [m] of sensor
+ * @param std_landmark[] Array of dimension 2 [standard deviation of range [m],
+ *   standard deviation of bearing [rad]]
+ * @param observations Vector of landmark observations
+ * @param map Map class containing map landmarks
+ */
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
 		std::vector<LandmarkObs> observations, Map map_landmarks) {
 	// TODO: Update the weights of each particle using a mult-variate Gaussian distribution. You can read
@@ -166,6 +175,10 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   and the following is a good resource for the actual equation to implement (look at equation 
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
+
+	for (int i=0; i < observations.size(); i++) {
+
+	}
 }
 
 void ParticleFilter::resample() {
