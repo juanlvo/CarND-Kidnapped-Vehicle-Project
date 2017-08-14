@@ -150,7 +150,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 		observations[i].id = map_id;
 	}
 
-
+	return;
 
 }
 
@@ -178,7 +178,76 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
 	for (int i=0; i < observations.size(); i++) {
 
+		//get the coordinates of the particles
+		double pX = particles[i].x;
+		double pY = particles[i].y;
+		double pTheta = particle[i].theta;
+
+		//create a vector with landmarks locations predicted
+		vector<LandmarkObs> predictions;
+
+		//for each map landmark
+		for (int j=0; j < map_landmarks.size(); j++) {
+
+			//get id and x, y
+			float lmX = map_landmarks.landmark_list[j].x_f;
+			float lmY = map_landmarks.landmark_list[j].y_f;
+			int lmId = map_landmarks.landmark_list[j].id_i;
+
+			//landmarks in the sensor range of the particle
+			if (fabs(lmX-pX) <= sensor_range && fabs(lmY-pY) <= sensor_range) {
+
+				//add the prediction
+				predictions.push_back(LandmarkObs{lmId, lmX, lmY});
+			}
+		}
+
+		//create and populate of the list of observations transformed to map coordinates
+		vector<LandmarkObs> transformedOs;
+
+		for (int j = 0; j < observations.size(); j++) {
+
+		      double tX = cos(pTheta)*observations[j].x - sin(pTheta)*observations[j].y + p_x;
+		      double tY = sin(pTheta)*observations[j].x + cos(pTheta)*observations[j].y + p_y;
+		      transformedOs.push_back(LandmarkObs{ observations[j].id, tX, tY });
+
+		}
+
+		//execute data association for the predictions and transformed  observations on current particle
+		dataAssociation(predictions, transformedOs);
+
+		//init again the weight
+		particles[i].weight = 1.0;
+
+		for (int j = 0; j <  transformedOs.size(); j++) {
+
+		      //observation and associated prediction coordinates
+		      double oX, oY, prX, prY;
+		      oX = transformed_os[j].x;
+		      oY = transformed_os[j].y;
+
+		      int associatedPrediction = transformed_os[j].id;
+
+		      // get the x,y coordinates of the prediction associated with the current observation
+		      for (unsigned int k = 0; k < predictions.size(); k++) {
+		        if (predictions[k].id == associatedPrediction) {
+		          prX = predictions[k].x;
+		          prY = predictions[k].y;
+		        }
+		      }
+
+		      // calculate weight for this observation with multivariate Gaussian
+		      double sX = std_landmark[0];
+		      double sY = std_landmark[1];
+		      double obsW = ( 1/(2*M_PI*sX*sY)) * exp( -( pow(prX-oX,2)/(2*pow(sX, 2)) + (pow(prY-oY,2)/(2*pow(sY, 2))) ) );
+
+		      // product of this obersvation weight with total observations weight
+		      particles[i].weight *= obsW;
+
+		}
 	}
+
+	return ;
 }
 
 void ParticleFilter::resample() {
