@@ -1,5 +1,5 @@
 # Overview
-This repository contains all the code needed to complete the final project for the Localization course in Udacity's Self-Driving Car Nanodegree.
+Self-Driving Car Engineer Nanodegree Program solution from Juan Luis Vivas Occhipinti
 
 #### Submission
 All you will submit is your completed version of `particle_filter.cpp`, which is located in the `src` directory. You should probably do a `git pull` before submitting to verify that your project passes the most up-to-date version of the grading code (there are some parameters in `src/main.cpp` which govern the requirements on accuracy and run time.)
@@ -130,5 +130,45 @@ The things the grading code is looking for are:
 1. **Accuracy**: your particle filter should localize vehicle position and yaw to within the values specified in the parameters `max_translation_error` and `max_yaw_error` in `src/main.cpp`.
 
 2. **Performance**: your particle filter should complete execution within the time of 100 seconds.
+
+## Project Instructions and Rubric
+
+<b>Accuracy</b>
+<table>
+	<tr>
+		<th>Criteria</th>
+		<th>Meets Specifications</th>
+	</tr>
+	<tr>
+		<td>Does your particle filter localize the vehicle to within the desired accuracy?</td>
+		<td>Yes, the simulator show the message "Success! Your particle filter passed!"</td>
+	</tr>
+</table>
+
+<b>Performance</b>
+<table>
+	<tr>
+		<th>Criteria</th>
+		<th>Meets Specifications</th>
+	</tr>
+	<tr>
+		<td>Does your particle run within the specified time of 100 seconds?</td>
+		<td>Yes, the simulator show the message "Success! Your particle filter passed!"</td>
+	</tr>
+</table>
+
+<b>General</b>
+<table>
+	<tr>
+		<th>Criteria</th>
+		<th>Meets Specifications</th>
+	</tr>
+	<tr>
+		<td>Does your code use a particle filter to localize the robot?</td>
+		<td>Yes, the particle filter was implemented</td>
+	</tr>
+</table>
+
+
 
 
