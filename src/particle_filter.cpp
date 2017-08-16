@@ -37,12 +37,12 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	num_particles = 50;
 	double initial_weight = 1.0;
 
-	default_random_engine gen;
+	static default_random_engine gen;
 
 	// This line creates a normal (Gaussian) distribution
-	normal_distribution<double> dist_x(x, std[0]);
-	normal_distribution<double> dist_y(y, std[1]);
-	normal_distribution<double> dist_theta(theta, std[2]);
+	normal_distribution<double> dist_x(0, std[0]);
+	normal_distribution<double> dist_y(0, std[1]);
+	normal_distribution<double> dist_theta(0, std[2]);
 
 	// TODO: Sample  and from these normal distrubtions like this:
 	//	 sample_x = dist_x(gen);
@@ -53,9 +53,9 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 
 		Particle p = {
 			i,
-			dist_x(gen),
-			dist_y(gen),
-			dist_theta(gen),
+			x+dist_x(gen),
+			y+dist_y(gen),
+			theta+dist_theta(gen),
 			initial_weight
 		};
 
@@ -82,12 +82,12 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
 
-	for (int i=0; i < num_particles; i++) {
+	// This line creates a normal (Gaussian) distribution for sensor noise
+	normal_distribution<double> dist_x(0, std_pos[0]);
+	normal_distribution<double> dist_y(0, std_pos[1]);
+	normal_distribution<double> dist_theta(0, std_pos[2]);
 
-		// This line creates a normal (Gaussian) distribution for sensor noise
-		normal_distribution<double> dist_x(particles[i].x, std_pos[0]);
-		normal_distribution<double> dist_y(particles[i].y, std_pos[1]);
-		normal_distribution<double> dist_theta(particles[i].theta, std_pos[2]);
+	for (int i=0; i < num_particles; i++) {
 
 		if (fabs(yaw_rate) < 0.00001) {
 		      particles[i].x += velocity * delta_t * cos(particles[i].theta);
@@ -98,14 +98,14 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 		      particles[i].theta += yaw_rate * delta_t;
 		}
 
-		default_random_engine gen;
+		static default_random_engine gen;
 
 	    // add noise
 	    particles[i].x += dist_x(gen);
 	    particles[i].y += dist_y(gen);
 	    particles[i].theta += dist_theta(gen);
 	}
-
+	return;
 }
 
 /**
@@ -126,10 +126,10 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 		LandmarkObs lo = observations[i];
 
 		// minimum distance to maximum possible
-		double min_dist = numeric_limits<double>::max();
+		double minDist = numeric_limits<double>::max();
 
 		// init id of landmark from map to be associated with the observation
-		int map_id = -1;
+		int mapId = -1;
 
 		for (int j=0; j < predicted.size(); j++) {
 
@@ -137,17 +137,17 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 			LandmarkObs p = predicted[j];
 
 			//get the distance between current/predicted landmarks
-			double cur_dist = dist(lo.x, lo.y, p.x, p.y);
+			double curDist = dist(lo.x, lo.y, p.x, p.y);
 
 			//find the predicted landmark nearest the current observed landmark
-			if (cur_dist < min_dist) {
-				min_dist = cur_dist;
-				map_id = p.id;
+			if (curDist < minDist) {
+				minDist = curDist;
+				mapId = p.id;
 			}
 		}
 
 		//set the observation id to the nearest
-		observations[i].id = map_id;
+		observations[i].id = mapId;
 	}
 
 	return;
@@ -176,7 +176,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
 
-	for (int i=0; i < observations.size(); i++) {
+	for (int i=0; i < num_particles; i++) {
 
 		//get the coordinates of the particles
 		double pX = particles[i].x;
@@ -229,7 +229,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		      int associatedPrediction = transformedOs[j].id;
 
 		      // get the x,y coordinates of the prediction associated with the current observation
-		      for (unsigned int k = 0; k < predictions.size(); k++) {
+		      for (int k = 0; k < predictions.size(); k++) {
 		        if (predictions[k].id == associatedPrediction) {
 		          prX = predictions[k].x;
 		          prY = predictions[k].y;
@@ -261,9 +261,10 @@ void ParticleFilter::resample() {
 
 	vector<Particle> particlesNew;
 
-	default_random_engine gen;
+	static default_random_engine gen;
 
 	//read and assign all the weights
+	vector<double> weights;
 	for (int i=0; i < num_particles; i++) {
 		weights.push_back(particles[i].weight);
 	}
@@ -291,6 +292,7 @@ void ParticleFilter::resample() {
 	}
 
 	particles = particlesNew;
+	return;
 }
 
 Particle ParticleFilter::SetAssociations(Particle particle, std::vector<int> associations, std::vector<double> sense_x, std::vector<double> sense_y)
